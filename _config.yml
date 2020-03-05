@@ -18,11 +18,11 @@ minimal_mistakes_skin    : "air" # "air", "aqua", "contrast", "dark", "default",
 locale                   : "en-US"
 title                    : "Anpandu's Blog"
 title_separator          : "-"
-subtitle                 : "yoyoyo" # site tagline that appears below site title in masthead
+subtitle                 : "" # site tagline that appears below site title in masthead
 name                     : "Ananta Pandu"
 description              : "An amazing website."
 url                      : "https://anpandu.github.io" # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
-baseurl                  : # the subpath of your site, e.g. "/blog"
+baseurl                  : "/blog" # the subpath of your site, e.g. "/blog"
 repository               : "anpandu/anpandu.github.io" # GitHub username/repo-name e.g. "mmistakes/minimal-mistakes"
 teaser                   : # path of fallback teaser image, e.g. "/assets/images/500x300.png"
 logo                     : # path of logo image to display in the masthead, e.g. "/assets/images/88x88.png"
@@ -108,7 +108,7 @@ analytics:
 # Site Author
 author:
   name             : "Ananta Pandu"
-  avatar           : "https://pbs.twimg.com/profile_images/1127564257371885568/1NVES6bR.png"
+  avatar           : "https://secure.gravatar.com/avatar/4c35d531244ef10e5f2dcc9ee36e2c8c?size=400"
   bio              : "Data Engineer"
   location         : "Jakarta, ID"
   # location         : "Jakarta, ID 🇮🇩"
