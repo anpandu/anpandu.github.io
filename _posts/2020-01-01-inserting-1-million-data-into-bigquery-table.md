@@ -1,6 +1,6 @@
 ---
-layout: single
-classes: wide
+layout: single2
+# classes: wide
 title:  "Inserting 1 Million data into BigQuery Table"
 cover: "https://images.unsplash.com/photo-1552474458-59a25d46b57f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1951&q=80"
 description: Inserting 1 Million data into BigQuery Table.
@@ -10,8 +10,9 @@ categories:
 tags:
   - golang
   - bigquery
-# toc: true
-excerpt: "Exploring Go language and it's features to write high-performance program."
+toc: true
+toc_sticky: true
+excerpt: "Exploring Go language and its features to write high-performance program."
 header:
   overlay_image: "https://images.unsplash.com/photo-1549113640-ac1757c2d2b3?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=2050&q=80"
   overlay_filter: 0.5 # same as adding an opacity of 0.5 to a black background
@@ -27,11 +28,11 @@ comments: True
 
 Moving data from multiple sources into multiple databases is one of the data engineer's responsibilities. It is always recommended to use simple and direct approach first, especially when the data is small enough, like iterating data one by one and inserting it at the same time. However this approach will not going to work well on larger sized data or higher throughput stream data.
 
-In this blog post, we will demonstrate how to insert JSON text file into Google's BigQuery Table using Go language and it's various native libraries (channel, goroutine, waitgroup). Go is known for one of the best language to write high-performance programs due to it's native libraries that make concurrent and parallel programming easier.
+In this blog post, we will demonstrate how to insert JSON text file into Google's BigQuery Table using Go language and its various native libraries (channel, goroutine, waitgroup). Go is known for one of the best language to write high-performance programs due to its native libraries that make concurrent and parallel programming easier.
 
 ## Preparation
 
-For preparation, let's create a text file containing 1 million rows of single JSON per row, using a python script provided below <sup>[[1]]({{site.base_url}}#cite_note-1)</sup>.
+For preparation, let's create a text file containing 1 million rows of single JSON per row, using a python script provided below<sup>[[1]]({{site.base_url}}#cite_note-1)</sup>.
 
 ```sh
 # Generate dataset
@@ -57,7 +58,7 @@ For BigQuery, make sure we have GCP key JSON file that has access to modify BigQ
 
 ## Part One: Simple approach
 
-We will do three approaches to do insertion. But first, let's use simplest approach. Read text file one line by one and insert it to a BigQuery table one at a time.
+We will do three approaches to do insertion. But first, let's use simplest approach. Read text file one by one and insert it to a BigQuery table one at a time.
 
 <figure>
 	<a href="../../assets/images/i1m-part-one.png">
@@ -66,7 +67,7 @@ We will do three approaches to do insertion. But first, let's use simplest appro
 	<!-- <figcaption><a href="http://www.flickr.com/photos/80901381@N04/7758832526/" title="Morning Fog Emerging From Trees by A Guy Taking Pictures, on Flickr">Morning Fog Emerging From Trees by A Guy Taking Pictures, on Flickr</a>.</figcaption> -->
 </figure>
 
-In this diagram, there are three main components: 1) `File Reader`, 2) Channel `c1`, and 3) `Worker`. `File Reader` will read text file one by one line and send it to channel `c1`. Channel `c1` to share string data. `Worker` is responsible for receiving string data from channel `c1` and inserting it into a BigQuery table. 
+In this diagram, there are three main components: 1) `File Reader`, 2) Channel `c1`, and 3) `Worker`. `File Reader` is for reading text file and sending lines to channel `c1`. Channel `c1` is for sharing string data. `Worker` is responsible for receiving string data from channel `c1` and inserting it into a BigQuery table. 
 
 Channel is a native type in Go that enable us to send/receive values and share it accross coroutine (goroutine). Let's define Channel `c1` first.
 
@@ -74,7 +75,7 @@ Channel is a native type in Go that enable us to send/receive values and share i
 c1 = make(chan string)
 ```
 
-Next, we create `File Reader` as an anonymous function and immediately run it as a goroutine. Using `go` keyword in front of function call can enable it to run asynchrounously/non-blocking to main function.
+Next, define `File Reader` as an anonymous function and immediately run it as a goroutine. Using `go` keyword in front of function call can enable it to run asynchrounously/non-blocking to main function (goroutine).
 
 ```go
 // Read file line by line and send it to channel
@@ -94,7 +95,7 @@ go func(filepath string, chanStr chan<- string) {
 }(FILEPATH, c1)
 ```
 
-Next, we define `Worker` outside main function. What this function does is to continously receiving string data from a channel, parse it, and insert it to BQ Table. When the channel is closed, it will stop.
+Next, define `Worker` outside main function. What this function does is to continously receiving string data from a channel, parse it, and insert it to BQ Table. When the channel is closed, it will stop.
 
 ```go
 func deployWorker(ch <-chan string, project, dataset, table string, wg *sync.WaitGroup) {
@@ -130,9 +131,9 @@ wg.Wait()
 log.Info("Done in ", time.Since(start).Seconds(), "seconds")
 ```
 
-Don't forget that goroutines are asynchronous, the program will done be immediately. That's why we use `WaitGroup`, it enables goroutine to be done first and then proceed. It is one of very important Go native features, `WaitGroup` usually used for waiting multiple parallel goroutines.
+Don't forget that goroutines are asynchronous, the program will done be immediately. To prevent that, Go has native feature called `WaitGroup`. It enables goroutine to be done first and then proceed to the next step. It is one of very important Go native features, `WaitGroup` usually used for waiting multiple parallel goroutines.
 
-This Go script is avaliable at `cmd/main1/main1.go` <sup>[[1]]({{site.base_url}}#cite_note-1)</sup>.
+This Go script is available at `cmd/main1/main1.go`<sup>[[1]]({{site.base_url}}#cite_note-1)</sup>.
 
 <!-- ```bash
 ➜  go-json-to-bq git:(master) go run main.go --filepath=./students-10.json.txt
@@ -151,7 +152,7 @@ It done in five seconds, however duration will propotionally larger with file si
 
 ## Part Two: Multiple Rows Insertions
 
-According to BigQuery Streaming Insert Documentation <sup>[[2]]({{site.base_url}}#cite_note-2)</sup>., we can insert multiple rows in one API call. Let's modify our program.
+According to BigQuery Streaming Insert Documentation<sup>[[2]]({{site.base_url}}#cite_note-2)</sup>, multiple rows can be inserted in one API call. Let's modify our program.
 
 <figure>
 	<a href="../../assets/images/i1m-part-two.png">
@@ -160,7 +161,7 @@ According to BigQuery Streaming Insert Documentation <sup>[[2]]({{site.base_url}
 	<!-- <figcaption><a href="http://www.flickr.com/photos/80901381@N04/7758832526/" title="Morning Fog Emerging From Trees by A Guy Taking Pictures, on Flickr">Morning Fog Emerging From Trees by A Guy Taking Pictures, on Flickr</a>.</figcaption> -->
 </figure>
 
-In this new architecture, we add two more components. First is `Buffer` and second is shannel `c2`. `Buffer` receive string data from `c1`, collect it temporary into an array with length `n`, and then send it to `c2` simultaneously. Let's run it as a goroutine.
+In this new architecture, we add two more components. First is `Buffer` and the second is channel `c2`. `Buffer` receive string data from `c1`, collect it temporary into an array with length `n`, and then send it to `c2` simultaneously. Let's run it as a goroutine.
 
 ```go
 // Put string data to a buffer and send it to another channel
@@ -191,7 +192,7 @@ c1 = make(chan string)
 c2 = make(chan []string)
 ```
 
-Next, edit `Worker` to receive a new type of channel `c2`.
+Next, modify `Worker` to receive new type of channel `c2`.
 
 ```go
 func deployWorker(ch <-chan []string, project, dataset, table string, wg *sync.WaitGroup) {
@@ -221,11 +222,11 @@ func deployWorker(ch <-chan []string, project, dataset, table string, wg *sync.W
 }
 ```
 
-Finally the second approach is done. Using right number of `n`, it can improve insertion speed significantly. This Go script is avaliable at `cmd/main2/main2.go` <sup>[[1]]({{site.base_url}}#cite_note-1)</sup>.
+Finally the second approach is done. Using right number of `n`, it can improve insertion speed significantly. This Go script is available at `cmd/main2/main2.go`<sup>[[1]]({{site.base_url}}#cite_note-1)</sup>.
 
 ## Part Three: Multiple Workers and Multiple Rows Insertion
 
-For the third and final approach, we will take advantage of Go's goroutine. Go can spawn multiple goroutines in large number and significantly faster than other coroutine in other programming languages. For this approach, we will deploy multiple workers.
+For the third and final approach, we will take advantage of Go's goroutine. Go can spawn multiple goroutines in large number and significantly faster than other coroutine in other programming languages.
 
 <figure>
 	<a href="../../assets/images/i1m-part-three.png">
@@ -234,7 +235,7 @@ For the third and final approach, we will take advantage of Go's goroutine. Go c
 	<!-- <figcaption><a href="http://www.flickr.com/photos/80901381@N04/7758832526/" title="Morning Fog Emerging From Trees by A Guy Taking Pictures, on Flickr">Morning Fog Emerging From Trees by A Guy Taking Pictures, on Flickr</a>.</figcaption> -->
 </figure>
 
-In this third approach, we will simply deploy more workers using for loop. Let's modify the main function a bit.
+In this approach, we will simply deploy more workers using for loop. Let's modify the main function a bit.
 
 ```go
 var wg sync.WaitGroup
@@ -246,11 +247,11 @@ wg.Wait()
 log.Info("Done in ", time.Since(start).Seconds(), "seconds")
 ```
 
-This Go script is avaliable at `cmd/main3/main3.go` <sup>[[1]]({{site.base_url}}#cite_note-1)</sup>.
+In addition to `n`, another variable `w` is introduced. It determines how many workers should be deployed, and thus make insertion even faster. This Go script is available at `cmd/main3/main3.go`<sup>[[1]]({{site.base_url}}#cite_note-1)</sup>.
 
 ## Benchmark
 
-For deciding max number of buffer and workers, we need to read BigQuery Streaming API quotas and limits <sup>[[3]]({{site.base_url}}#cite_note-3)</sup>.
+For deciding max number of buffer and workers, we need to read BigQuery Streaming API quotas and limits<sup>[[3]]({{site.base_url}}#cite_note-3)</sup>.
 
 ```
 Maximum rows per request: 10,000 rows per request, maximum of 500 rows is recommended
@@ -258,7 +259,7 @@ Concurrent API requests, per user: 300
 API requests per second, per user — 100
 ```
 
-Benchmark is taken using same type of machine, `n1-standard-1 (1 vCPU, 3.75 GB mem)`<sup>[[4]]({{site.base_url}}#cite_note-4)</sup>. Using multiple JSON text files generated at different sizes, we benchmark three approaches and measure time taken.
+Benchmark was taken using same type of machine, `n1-standard-1 (1 vCPU, 3.75 GB mem)`<sup>[[4]]({{site.base_url}}#cite_note-4)</sup>. Using multiple JSON text files generated at different sizes, we benchmark three approaches and measure time taken.
 
 | File     | Parameter   | 1.000 rows | 10.000    | 100.000   | 1.000.000 |
 |:---------|:------------|-----------:|----------:|----------:|----------:|
@@ -273,7 +274,7 @@ As we can see, higher number of `w` and `n` make insertion faster. Using our hig
 
 ## Conclusion
 
-In this blog post we learned to use concurrency/parallelism concept to make our programs do the job faster. We also explored Go language and it's native libraries (channel, goroutines, waitgroup) to develop a high-performance program.
+In this blog post we learned to use concurrency/parallelism concept to make our programs do the job faster. We also explored Go language and its native libraries (channel, goroutines, waitgroup) to develop a high-performance program.
 
 One thing to remember is that everything came with a tradeoff. We also need to watch out for memory and/or API calls limit when using large number of goroutines.
 
