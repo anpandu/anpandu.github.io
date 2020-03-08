@@ -12,7 +12,7 @@ tags:
   - bigquery
 toc: true
 toc_sticky: true
-excerpt: "Exploring Go language and its features to write high-performance program."
+excerpt: "Exploring Go language and its features to write high-performance programs."
 header:
   overlay_image: "https://images.unsplash.com/photo-1549113640-ac1757c2d2b3?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=2050&q=80"
   overlay_filter: 0.5 # same as adding an opacity of 0.5 to a black background
