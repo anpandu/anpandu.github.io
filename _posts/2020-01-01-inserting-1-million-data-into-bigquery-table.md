@@ -26,7 +26,7 @@ related: False
 comments: True
 ---
 
-Moving data from multiple sources into multiple databases is one of the data engineer's responsibilities. It is always recommended to use simple and direct approach first, especially when the data is small enough, like iterating data one by one and inserting it at the same time. However this approach will not going to work well on larger sized data or higher throughput stream data.
+Moving data from multiple sources into multiple databases is one of the data engineer responsibilities. It is always recommended to use simple and direct approach first, especially when the data is small enough, like iterating data one by one and inserting it at the same time. However this approach will not going to work well on larger sized data or higher throughput stream data.
 
 In this blog post, we will demonstrate how to insert JSON text file into Google's BigQuery Table using Go language and its various native libraries (channel, goroutine, waitgroup). Go is known for one of the best language to write high-performance programs due to its native libraries that make concurrent and parallel programming easier.
 
@@ -46,7 +46,7 @@ python3 gen-txt.py
 # -rw-rw-r-- 1 pandu pandu  26M Mar  5 18:31 students-1000000.json.txt
 ```
 
-We will get a text files like this. In this case, each row contain 22 characters = 22 Bytes.
+We will get text files like this. In this case, each row contains 22 characters = 22 Bytes.
 
 ```json
 {"id":1,"name":"aaa"}
@@ -56,7 +56,7 @@ We will get a text files like this. In this case, each row contain 22 characters
 
 For BigQuery, make sure we have GCP key JSON file that has access to modify BigQuery table and don't forget to export it to `GOOGLE_APPLICATION_CREDENTIALS` env var. After that, we all set.
 
-## Part One: Simple approach
+## Part One: Simple Approach
 
 We will do three approaches to do insertion. But first, let's use simplest approach. Read text file one by one and insert it to a BigQuery table one at a time.
 
@@ -69,13 +69,13 @@ We will do three approaches to do insertion. But first, let's use simplest appro
 
 In this diagram, there are three main components: 1) `File Reader`, 2) Channel `c1`, and 3) `Worker`. `File Reader` is for reading text file and sending lines to channel `c1`. Channel `c1` is for sharing string data. `Worker` is responsible for receiving string data from channel `c1` and inserting it into a BigQuery table. 
 
-Channel is a native type in Go that enable us to send/receive values and share it accross coroutine (goroutine). Let's define Channel `c1` first.
+Channel is a native type in Go that enable us to send/receive values and share it across coroutine (goroutine). Let's define Channel `c1` first.
 
 ```go
 c1 = make(chan string)
 ```
 
-Next, define `File Reader` as an anonymous function and immediately run it as a goroutine. Using `go` keyword in front of function call can enable it to run asynchrounously/non-blocking to main function (goroutine).
+Next, define `File Reader` as an anonymous function and immediately run it as a goroutine. Using `go` keyword in front of function call can enable it to run asynchronously/non-blocking to main function (goroutine).
 
 ```go
 // Read file line by line and send it to channel
@@ -95,7 +95,7 @@ go func(filepath string, chanStr chan<- string) {
 }(FILEPATH, c1)
 ```
 
-Next, define `Worker` outside main function. What this function does is to continously receiving string data from a channel, parse it, and insert it to BQ Table. When the channel is closed, it will stop.
+Next, define `Worker` outside main function. What this function does is to continuously receiving string data from a channel, parse it, and insert it to BQ Table. When the channel is closed, it will stop.
 
 ```go
 func deployWorker(ch <-chan string, project, dataset, table string, wg *sync.WaitGroup) {
@@ -135,22 +135,7 @@ Don't forget that goroutines are asynchronous, the program will done be immediat
 
 This Go script is available at `cmd/main1/main1.go`<sup>[[1]]({{site.base_url}}#cite_note-1)</sup>.
 
-<!-- ```bash
-➜  go-json-to-bq git:(master) go run main.go --filepath=./students-10.json.txt
-INFO[0000] Creating Table "myproject.mydataset.users" 
-INFO[0000] [{"name":"id","type":"NUMERIC","mode":"NULLABLE"},{"name":"name","type":"STRING","mode":"NULLABLE"}] 
-INFO[0001] Reading file                                 
-INFO[0001] Consume rows                                 
-INFO[0001] Inserted 1 rows - {"id":0,"name":"ccc"}      
-INFO[0002] Inserted 1 rows - {"id":1,"name":"bbb"}      
-INFO[0002] Inserted 1 rows - {"id":2,"name":"aaa"}  
-...
-INFO[0005] Done in 5.308954153seconds
-```
-
-It done in five seconds, however duration will propotionally larger with file size, so let's use other approaches. -->
-
-## Part Two: Multiple Rows Insertions
+## Part Two: Multiple Rows Insertion
 
 According to BigQuery Streaming Insert Documentation<sup>[[2]]({{site.base_url}}#cite_note-2)</sup>, multiple rows can be inserted in one API call. Let's modify our program.
 
@@ -161,7 +146,7 @@ According to BigQuery Streaming Insert Documentation<sup>[[2]]({{site.base_url}}
 	<!-- <figcaption><a href="http://www.flickr.com/photos/80901381@N04/7758832526/" title="Morning Fog Emerging From Trees by A Guy Taking Pictures, on Flickr">Morning Fog Emerging From Trees by A Guy Taking Pictures, on Flickr</a>.</figcaption> -->
 </figure>
 
-In this new architecture, we add two more components. First is `Buffer` and the second is channel `c2`. `Buffer` receive string data from `c1`, collect it temporary into an array with length `n`, and then send it to `c2` simultaneously. Let's run it as a goroutine.
+In this new architecture, we add two more components. First is `Buffer` and the second is channel `c2`. `Buffer` receives string data from `c1`, collect it temporarily into an array with length `n`, and then send it to `c2` simultaneously. Let's run it as a goroutine.
 
 ```go
 // Put string data to a buffer and send it to another channel
