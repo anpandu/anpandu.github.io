@@ -3,7 +3,7 @@ layout: single2
 # classes: wide
 title:  "Inserting 1 Million data into BigQuery Table"
 cover: "https://images.unsplash.com/photo-1552474458-59a25d46b57f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1951&q=80"
-description: Inserting 1 Million data into BigQuery Table.
+description: "Exploring Go language and its features to write high-performance programs."
 date:   2020-03-01 12:51:00 +0700
 categories:
   - blog
@@ -17,6 +17,7 @@ header:
   overlay_image: "https://images.unsplash.com/photo-1549113640-ac1757c2d2b3?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=2050&q=80"
   overlay_filter: 0.5 # same as adding an opacity of 0.5 to a black background
   caption: "Photo credit: [**Unsplash**](https://unsplash.com/@eli_allan_photography)"
+  og_image: "../../assets/images/i1m-part-one.png"
 #   teaser: "https://images.unsplash.com/photo-1549113640-ac1757c2d2b3?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=2050&q=80"
   # actions:
   #   - label: "More Info"
